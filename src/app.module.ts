@@ -13,7 +13,7 @@ import { AttendanceModule } from './attendance/attendance.module';
     TypeOrmModule.forRoot({
 
       type: 'mysql',
-      host: '195.35.59.20',
+      host: 'localhost',
       port: 3306,
       username: 'u450546278_attend',
       password: ':bQqao5u3K',
