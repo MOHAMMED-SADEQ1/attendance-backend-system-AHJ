@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>شاشة الشركة - تسجيل الحضور</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    min-height: 100vh;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .container {
+    width: 100%;
+    max-width: 500px;
+    padding: 20px;
+  }
+  .card {
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(12px);
+    border-radius: 24px;
+    padding: 40px 30px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.1);
+    text-align: center;
+  }
+  .card h1 { font-size: 28px; margin-bottom: 8px; }
+  .card p { color: #94a3b8; font-size: 14px; margin-bottom: 24px; }
+  .input-group {
+    text-align: right;
+    margin-bottom: 18px;
+  }
+  .input-group label {
+    display: block;
+    font-size: 13px;
+    color: #cbd5e1;
+    margin-bottom: 6px;
+  }
+  .input-group input {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 12px;
+    background: rgba(255,255,255,0.06);
+    color: #fff;
+    font-size: 16px;
+    outline: none;
+    transition: border 0.2s;
+  }
+  .input-group input:focus { border-color: #3b82f6; }
+  .input-group input::placeholder { color: #64748b; }
+  .btn {
+    width: 100%;
+    padding: 16px;
+    border: none;
+    border-radius: 12px;
+    font-size: 17px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-primary { background: #3b82f6; color: #fff; }
+  .btn-primary:hover { background: #2563eb; transform: translateY(-1px); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .btn-success { background: #22c55e; color: #fff; }
+  .btn-success:hover { background: #16a34a; transform: translateY(-1px); }
+  .btn-danger { background: #ef4444; color: #fff; }
+  .btn-danger:hover { background: #dc2626; transform: translateY(-1px); }
+
+  .error { color: #f87171; font-size: 13px; margin-top: 10px; }
+
+  /* Dashboard */
+  .dashboard-buttons { display: flex; gap: 14px; margin-top: 20px; }
+  .dashboard-buttons .btn { flex: 1; }
+
+  /* QR Area */
+  .qr-area { display: none; }
+  .qr-area.active { display: block; }
+  .qr-box {
+    background: #fff;
+    border-radius: 16px;
+    padding: 20px;
+    display: inline-block;
+    margin: 20px 0;
+  }
+  #qrcode { display: flex; justify-content: center; }
+  #qrcode canvas, #qrcode img { border-radius: 8px; }
+  .timer {
+    font-size: 48px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    margin: 10px 0;
+  }
+  .timer.urgent { color: #ef4444; animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+  .purpose-label {
+    display: inline-block;
+    padding: 4px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+  .purpose-checkin { background: #22c55e; color: #fff; }
+  .purpose-checkout { background: #f59e0b; color: #fff; }
+
+  /* Status overlay */
+  .status-overlay { display: none; }
+  .status-overlay.active { display: flex; }
+  .status-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+  }
+  .status-overlay .icon { font-size: 72px; margin-bottom: 16px; }
+  .status-overlay h2 { font-size: 28px; margin-bottom: 8px; }
+  .status-overlay p { color: #94a3b8; }
+  .status-overlay.error .icon,
+  .status-overlay.error h2 { color: #f87171; }
+  .status-overlay.success .icon,
+  .status-overlay.success h2 { color: #4ade80; }
+
+  .expiry-info {
+    color: #64748b;
+    font-size: 13px;
+    margin-top: 4px;
+  }
+
+  /* Logout */
+  .logout-btn {
+    position: fixed;
+    top: 16px; left: 16px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #94a3b8;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    z-index: 50;
+  }
+  .logout-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
+
+  .hidden { display: none; }
+
+  /* Company logo area */
+  .logo-area {
+    margin-bottom: 16px;
+  }
+  .logo-area .icon { font-size: 48px; }
+
+  @media (max-width: 480px) {
+    .card { padding: 24px 20px; }
+    .timer { font-size: 36px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container" id="app">
+
+  <!-- Login Screen -->
+  <div id="screen-login" class="card">
+    <div class="logo-area"><div class="icon">🏢</div></div>
+    <h1>شاشة الشركة</h1>
+    <p>تسجيل الدخول لحساب المشرف</p>
+    <div class="input-group">
+      <label>البريد الإلكتروني</label>
+      <input type="email" id="login-email" placeholder="admin@example.com" dir="ltr">
+    </div>
+    <div class="input-group">
+      <label>كلمة المرور</label>
+      <input type="password" id="login-password" placeholder="••••••" dir="ltr">
+    </div>
+    <button class="btn btn-primary" id="btn-login" onclick="login()">تسجيل الدخول</button>
+    <div class="error" id="login-error"></div>
+  </div>
+
+  <!-- Dashboard Screen -->
+  <div id="screen-dashboard" class="card hidden">
+    <div class="logo-area"><div class="icon">🏢</div></div>
+    <h1>شاشة الشركة</h1>
+    <p>اختر نوع رمز QR للتوليد</p>
+    <div class="dashboard-buttons">
+      <button class="btn btn-success" onclick="generateQr('CHECK_IN')">
+        ✅ تسجيل حضور
+      </button>
+      <button class="btn btn-danger" onclick="generateQr('CHECK_OUT')">
+        🚪 تسجيل انصراف
+      </button>
+    </div>
+    <button class="logout-btn" onclick="logout()">تسجيل خروج</button>
+  </div>
+
+  <!-- QR Screen -->
+  <div id="screen-qr" class="card hidden">
+    <div id="screen-qr-content">
+      <h1>امسح رمز QR</h1>
+      <p>وجه كاميرا هاتفك نحو الشاشة</p>
+      <div id="purpose-badge" class="purpose-label purpose-checkin">تسجيل حضور</div>
+      <div class="qr-box">
+        <div id="qrcode"></div>
+      </div>
+      <div class="timer" id="timer">30</div>
+      <p style="color:#94a3b8;font-size:13px;">ثانية متبقية</p>
+      <p class="expiry-info" id="expiry-info">⏱️ مدة الصلاحية: 30 ثانية</p>
+    </div>
+    <div id="screen-qr-expired" style="display:none;">
+      <div style="font-size:64px;margin-bottom:16px;">⏰</div>
+      <h2>انتهت صلاحية الرمز</h2>
+      <p style="color:#94a3b8;margin-top:8px;">يرجى توليد رمز جديد</p>
+    </div>
+    <button class="btn btn-primary" id="btn-back" onclick="backToDashboard()" style="margin-top:16px;">العودة للرئيسية</button>
+  </div>
+
+</div>
+
+<!-- Status Overlay -->
+<div class="status-overlay" id="status-overlay">
+  <div class="icon" id="status-icon">✅</div>
+  <h2 id="status-title">تم بنجاح</h2>
+  <p id="status-desc">تم تسجيل العملية بنجاح</p>
+</div>
+
+<script>
+const API = '/api';
+let TOKEN = localStorage.getItem('company_token');
+
+function show(id) {
+  document.querySelectorAll('#screen-login, #screen-dashboard, #screen-qr').forEach(el => el.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+}
+
+function loginError(msg) {
+  document.getElementById('login-error').textContent = msg;
+}
+
+async function login() {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  if (!email || !password) { loginError('يرجى إدخال البريد الإلكتروني وكلمة المرور'); return; }
+  loginError('');
+  document.getElementById('btn-login').disabled = true;
+  document.getElementById('btn-login').textContent = 'جاري تسجيل الدخول...';
+  try {
+    const res = await fetch(API + '/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+    if (!res.ok) { loginError(data.message || 'فشل تسجيل الدخول'); return; }
+    if (data.employee && data.employee.role !== 'ADMIN') { loginError('هذا الحساب ليس مشرفاً'); return; }
+    TOKEN = data.access_token;
+    localStorage.setItem('company_token', TOKEN);
+    localStorage.setItem('company_email', email);
+    showDashboard();
+  } catch (e) {
+    loginError('لا يمكن الاتصال بالخادم');
+  } finally {
+    document.getElementById('btn-login').disabled = false;
+    document.getElementById('btn-login').textContent = 'تسجيل الدخول';
+  }
+}
+
+function logout() {
+  fetch(API + '/auth/logout', {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + TOKEN }
+  }).catch(() => {});
+  localStorage.removeItem('company_token');
+  localStorage.removeItem('company_email');
+  TOKEN = null;
+  show('screen-login');
+}
+
+function showDashboard() {
+  show('screen-dashboard');
+}
+
+function backToDashboard() {
+  stopPolling();
+  show('screen-dashboard');
+}
+
+// ---------- QR Generation ----------
+let currentQrTokenId = null;
+let pollingInterval = null;
+let countdownInterval = null;
+
+function stopPolling() {
+  if (pollingInterval) { clearInterval(pollingInterval); pollingInterval = null; }
+  if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }
+}
+
+async function generateQr(purpose) {
+  try {
+    const res = await fetch(API + '/admin/attendance/generate-qr', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + TOKEN
+      },
+      body: JSON.stringify({ purpose })
+    });
+    if (res.status === 401) { localStorage.removeItem('company_token'); TOKEN = null; show('screen-login'); return; }
+    const data = await res.json();
+    if (!res.ok) { alert(data.message || 'فشل توليد الرمز'); return; }
+
+    const tokenId = data.id;
+    currentQrTokenId = tokenId;
+
+    // Show QR screen
+    document.getElementById('screen-qr-expired').style.display = 'none';
+    document.getElementById('screen-qr-content').style.display = 'block';
+    document.getElementById('btn-back').textContent = 'العودة للرئيسية';
+    show('screen-qr');
+
+    // Purpose badge
+    const badge = document.getElementById('purpose-badge');
+    if (purpose === 'CHECK_IN') {
+      badge.textContent = '✅ تسجيل حضور';
+      badge.className = 'purpose-label purpose-checkin';
+    } else {
+      badge.textContent = '🚪 تسجيل انصراف';
+      badge.className = 'purpose-label purpose-checkout';
+    }
+
+    // Render QR code
+    document.getElementById('qrcode').innerHTML = '';
+    new QRCode(document.getElementById('qrcode'), {
+      text: data.qrCode,
+      width: 220,
+      height: 220,
+      colorDark: '#000000',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.H
+    });
+
+    // Start countdown from expiresAt
+    const expiresAt = new Date(data.expiresAt);
+    const expirySeconds = data.expirySeconds || 30;
+    document.getElementById('expiry-info').textContent = '⏱️ مدة الصلاحية: ' + expirySeconds + ' ثانية';
+    startCountdown(expiresAt);
+    startPolling(tokenId, expiresAt, purpose);
+  } catch (e) {
+    alert('حدث خطأ أثناء توليد الرمز');
+  }
+}
+
+// ---------- Countdown ----------
+function startCountdown(expiresAt) {
+  if (countdownInterval) clearInterval(countdownInterval);
+  const timerEl = document.getElementById('timer');
+  function tick() {
+    const remaining = Math.max(0, Math.floor((expiresAt.getTime() - Date.now()) / 1000));
+    timerEl.textContent = remaining;
+    timerEl.classList.toggle('urgent', remaining <= 5);
+    if (remaining <= 0) {
+      clearInterval(countdownInterval);
+      countdownInterval = null;
+      showExpired();
+    }
+  }
+  tick();
+  countdownInterval = setInterval(tick, 200);
+}
+
+function showExpired() {
+  stopPolling();
+  document.getElementById('screen-qr-content').style.display = 'none';
+  document.getElementById('screen-qr-expired').style.display = 'block';
+  document.getElementById('btn-back').textContent = 'العودة للرئيسية';
+}
+
+// ---------- Polling ----------
+function startPolling(tokenId, expiresAt, purpose) {
+  if (pollingInterval) clearInterval(pollingInterval);
+  pollingInterval = setInterval(async () => {
+    try {
+      if (new Date() > expiresAt) {
+        showExpired();
+        return;
+      }
+      const res = await fetch(API + '/admin/attendance/qr-status/' + tokenId, {
+        headers: { 'Authorization': 'Bearer ' + TOKEN }
+      });
+      if (res.status === 401) { localStorage.removeItem('company_token'); TOKEN = null; show('screen-login'); return; }
+      const data = await res.json();
+      if (data.used) {
+        stopPolling();
+        if (data.scanError) {
+          showFailure(data.scanError, purpose);
+        } else {
+          showSuccess(purpose);
+        }
+      }
+    } catch (e) {}
+  }, 1000);
+}
+
+// ---------- Success ----------
+function showSuccess(purpose) {
+  const overlay = document.getElementById('status-overlay');
+  const icon = document.getElementById('status-icon');
+  const title = document.getElementById('status-title');
+  const desc = document.getElementById('status-desc');
+  overlay.className = 'status-overlay active success';
+  if (purpose === 'CHECK_IN') {
+    icon.textContent = '✅';
+    title.textContent = 'تم تسجيل الحضور';
+    desc.textContent = 'تم تسجيل حضور الموظف بنجاح';
+  } else {
+    icon.textContent = '🚪';
+    title.textContent = 'تم تسجيل الانصراف';
+    desc.textContent = 'تم تسجيل انصراف الموظف بنجاح';
+  }
+  overlay.classList.add('active');
+  setTimeout(() => {
+    overlay.classList.remove('active');
+    show('screen-dashboard');
+  }, 2000);
+}
+
+// ---------- Failure ----------
+function showFailure(errorMsg, purpose) {
+  const overlay = document.getElementById('status-overlay');
+  const icon = document.getElementById('status-icon');
+  const title = document.getElementById('status-title');
+  const desc = document.getElementById('status-desc');
+  overlay.className = 'status-overlay active error';
+  icon.textContent = '❌';
+  title.textContent = 'فشل التسجيل';
+  desc.textContent = errorMsg;
+  overlay.classList.add('active');
+  setTimeout(() => {
+    overlay.classList.remove('active');
+    show('screen-dashboard');
+  }, 3000);
+}
+
+// ---------- Restore session ----------
+(async function init() {
+  if (TOKEN) {
+    try {
+      const res = await fetch(API + '/auth/profile', {
+        headers: { 'Authorization': 'Bearer ' + TOKEN }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.role === 'ADMIN') { show('screen-dashboard'); return; }
+      }
+    } catch (e) {}
+    localStorage.removeItem('company_token');
+    TOKEN = null;
+  }
+  show('screen-login');
+})();
+</script>
+</body>
+</html>
