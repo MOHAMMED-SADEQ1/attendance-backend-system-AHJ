@@ -9,7 +9,7 @@ import { EmployeeLeavesController } from './employee-leaves.controller';
 @Module({
   imports: [TypeOrmModule.forFeature([Employee, LeaveRequest])],
   providers: [EmployeesService],
-  controllers: [EmployeesController, EmployeeLeavesController],
+  controllers: [EmployeeLeavesController, EmployeesController],
   exports: [EmployeesService],
 })
 export class EmployeesModule {}
