@@ -37,7 +37,7 @@ export class DashboardController {
 
   @Get('today')
   async getTodaySummary() {
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Riyadh' });
     const totalEmployees = await this.employeeRepo.count({ where: { isActive: true } });
     const pendingLeaves = await this.leaveRepo.count({ where: { status: 'PENDING' } });
 
