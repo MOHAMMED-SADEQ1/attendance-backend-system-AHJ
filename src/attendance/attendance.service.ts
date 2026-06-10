@@ -263,7 +263,7 @@ export class AttendanceService {
 
     const today = this.getTodayRiyadh();
     const session = await this.attendanceRepository.findOne({
-      where: { employeeId, date: today, checkInTime: Not(IsNull()), checkOutTime: IsNull() },
+      where: { employeeId, checkInTime: Not(IsNull()), checkOutTime: IsNull() },
       order: { checkInTime: 'DESC' },
     });
 

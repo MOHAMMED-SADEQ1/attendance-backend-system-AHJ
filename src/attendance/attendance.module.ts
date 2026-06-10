@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AdminAttendanceController } from './admin-attendance.controller';
 import { EmployeeAttendanceController } from './employee-attendance.controller';
 import { AttendanceService } from './attendance.service';
+import { CheckoutCronService } from './checkout-cron.service';
 import { QrDynamicToken } from '../admin/entities/qr-dynamic-token.entity';
 import { AttendanceSession } from '../admin/entities/attendance-session.entity';
 import { AuditLog } from '../admin/entities/audit-log.entity';
@@ -17,7 +18,7 @@ import { LeaveRequest } from '../admin/entities/leave-request.entity';
     TypeOrmModule.forFeature([QrDynamicToken, AttendanceSession, AuditLog, ShiftPolicy, Employee, SystemSetting, Holiday, LeaveRequest]),
   ],
   controllers: [AdminAttendanceController, EmployeeAttendanceController],
-  providers: [AttendanceService],
+  providers: [AttendanceService, CheckoutCronService],
   exports: [AttendanceService],
 })
 export class AttendanceModule {}

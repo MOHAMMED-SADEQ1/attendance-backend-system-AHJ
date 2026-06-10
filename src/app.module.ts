@@ -1,5 +1,6 @@
 import { Module, ValidationPipe } from '@nestjs/common';
 import { APP_PIPE } from '@nestjs/core';
+import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -10,6 +11,7 @@ import { AttendanceModule } from './attendance/attendance.module';
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     TypeOrmModule.forRoot({
 
       type: 'mysql',
